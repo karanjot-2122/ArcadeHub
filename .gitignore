@@ -1,0 +1,13 @@
+# Dependency folders
+node_modules/
+
+# Environment variables (Secrets)
+.env
+
+# Linux/Mac system files
+.DS_Store
+*.log
+
+# Build outputs
+dist/
+build/
