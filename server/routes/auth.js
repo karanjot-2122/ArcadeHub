@@ -31,5 +31,38 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: "Server error during registration" });
   }
 });
+/// Updated Login Route in server/routes/auth.js
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid Credentials" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
+
+    // Check if secret exists before signing
+    if (!process.env.JWT_SECRET) {
+        console.error("JWT_SECRET is missing from .env file!");
+        return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '1h' }
+    );
+
+    res.json({
+      token,
+      user: { id: user._id, username: user.username, email: user.email }
+    });
+
+  } catch (err) {
+    console.error(err); // This will show the real error in your terminal
+    res.status(500).json({ message: "Server error during login" });
+  }
+});
 
 module.exports = router;
