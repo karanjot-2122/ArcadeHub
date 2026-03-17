@@ -30,14 +30,29 @@ const GlobalChat = () => {
       setMessages(history || []);
     });
 
+    // FILTER APPROACH: Only add the message if it's not the one we just sent
     socket.on('global-message', (payload) => {
-      setMessages((prev) => [...prev, payload]);
+      setMessages((prev) => {
+        // If the last message in state matches the incoming payload (sender & text), 
+        // it's likely the broadcast of our own message. Skip it.
+        const lastMsg = prev[prev.length - 1];
+        const isDuplicate = lastMsg && 
+                           lastMsg.user === payload.user && 
+                           lastMsg.text === payload.text;
+
+        if (isDuplicate && payload.user === user.username) {
+          return prev;
+        }
+        return [...prev, payload];
+      });
     });
 
+    // MEMORY LEAK FIX: Clean up all listeners
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('global-message');
+      socket.off('global-history');
       socket.disconnect();
     };
   }, [token, user]);
@@ -49,19 +64,33 @@ const GlobalChat = () => {
   };
 
   const sendMessage = () => {
-    const text = (message || '').trim();
-    if (!text || !socketRef.current) return;
+  const text = (message || '').trim();
+  if (!text || !socketRef.current) return;
 
-    const payload = { user: user.username || 'Unknown', text, time: new Date().toISOString() };
-    socketRef.current.emit('global-message', payload);
-    setMessages((prev) => [...prev, payload]);
-    setMessage('');
+  const payload = { 
+    user: user.username || 'Unknown', 
+    text, 
+    // Let the server handle the timestamp if possible for consistency
+    time: new Date().toISOString() 
   };
+
+  // 1. Emit to server
+  socketRef.current.emit('global-message', payload);
+  
+  // 2. REMOVE THIS LINE (The optimistic update)
+  // setMessages((prev) => [...prev, payload]); 
+  
+  setMessage('');
+};
 
   return (
     <div className="max-w-4xl mx-auto p-4 text-white">
       <h1 className="text-3xl font-bold text-blue-400 mb-4">Global Chat</h1>
-      <p className="text-sm text-gray-300 mb-4">Status: {connected ? 'Connected' : 'Disconnected'}</p>
+      <p className="text-sm text-gray-300 mb-4">
+        Status: <span className={connected ? 'text-green-400' : 'text-red-400'}>
+          {connected ? 'Connected' : 'Disconnected'}
+        </span>
+      </p>
 
       <div className="h-80 overflow-y-auto border border-gray-700 rounded-lg bg-gray-900 p-4 mb-4">
         {messages.map((m, idx) => {
@@ -69,11 +98,11 @@ const GlobalChat = () => {
           return (
             <div key={`${m.user}-${idx}-${m.time}`} className={`mb-2 flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] p-2 rounded-lg ${isSelf ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'}`}>
-                <div className="text-xs text-gray-200 mb-1 flex items-center justify-between">
-                  <span>{m.user}</span>
+                <div className="text-xs text-gray-200 mb-1 flex items-center justify-between gap-4">
+                  <span className="font-bold">{m.user}</span>
                   <span>{formatTime(m.time)}</span>
                 </div>
-                <div>{m.text}</div>
+                <div className="break-words">{m.text}</div>
               </div>
             </div>
           );
@@ -86,10 +115,13 @@ const GlobalChat = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-          className="flex-1 p-2 rounded border border-gray-700 bg-gray-800"
+          className="flex-1 p-2 rounded border border-gray-700 bg-gray-800 focus:outline-none focus:border-blue-500"
           placeholder="Type a message..."
         />
-        <button onClick={sendMessage} className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500">
+        <button 
+          onClick={sendMessage} 
+          className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500 transition-colors"
+        >
           Send
         </button>
       </div>
