@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Auth from './pages/Auth';
 import QuickPlay from './pages/QuickPlay';
+import GlobalChat from './pages/GlobalChat';
 import Friends from './pages/Friends';
 import Profile from './pages/Profile';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
@@ -27,6 +28,10 @@ function AppRoutes() {
       <Route
         path="/quickplay"
         element={isAuthenticated ? <QuickPlay /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/global-chat"
+        element={isAuthenticated ? <GlobalChat /> : <Navigate to="/login" replace />}
       />
       <Route
         path="/profile"
