@@ -57,8 +57,8 @@ router.post('/login', async (req, res) => {
     user.isOnline = true;
     await user.save();
 
-    await user.populate('friends', 'username email isOnline').execPopulate();
-    await user.populate('friendRequests.from', 'username email').execPopulate();
+    await user.populate('friends', 'username email isOnline');
+    await user.populate({ path: 'friendRequests.from', select: 'username email' });
 
     res.json({
       token,

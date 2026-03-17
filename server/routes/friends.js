@@ -26,7 +26,7 @@ router.get('/search', async (req, res) => {
 // get friends list
 router.get('/', async (req, res) => {
   try {
-    await req.user.populate('friends', 'username email isOnline').execPopulate();
+    await req.user.populate('friends', 'username email isOnline');
     const friends = req.user.friends.map((f) => ({ id: f._id, username: f.username, email: f.email, isOnline: f.isOnline }));
     return res.json({ friends });
   } catch (err) {
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
 // get friend requests received
 router.get('/requests', async (req, res) => {
   try {
-    await req.user.populate('friendRequests.from', 'username email').execPopulate();
+    await req.user.populate({ path: 'friendRequests.from', select: 'username email' });
     const requests = req.user.friendRequests.map((r) => ({ id: r.from._id, username: r.from.username, email: r.from.email, createdAt: r.createdAt }));
     return res.json({ requests });
   } catch (err) {
