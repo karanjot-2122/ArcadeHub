@@ -37,7 +37,7 @@ const Auth = ({ initialMode = 'login' }) => {
     }
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', loginData);
-      auth.login(res.data.token);
+      auth.login(res.data.token, res.data.user);
       setError('');
       navigate('/quickplay');
     } catch (err) {

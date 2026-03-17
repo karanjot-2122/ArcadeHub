@@ -54,14 +54,46 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    user.isOnline = true;
+    await user.save();
+
+    await user.populate('friends', 'username email isOnline').execPopulate();
+    await user.populate('friendRequests.from', 'username email').execPopulate();
+
     res.json({
       token,
-      user: { id: user._id, username: user.username, email: user.email }
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        isOnline: user.isOnline,
+        friends: user.friends.map((f) => ({ id: f._id, username: f.username, email: f.email, isOnline: f.isOnline })),
+        friendRequests: user.friendRequests.map((r) => ({ id: r.from._id, username: r.from.username, email: r.from.email, createdAt: r.createdAt })),
+      }
     });
 
   } catch (err) {
     console.error(err); // This will show the real error in your terminal
     res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+router.post('/logout', async (req, res) => {
+  try {
+    const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(400).json({ message: 'Token required' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user) {
+      user.isOnline = false;
+      await user.save();
+    }
+
+    res.json({ message: 'Logout success' });
+  } catch (err) {
+    console.error('Logout error', err);
+    res.status(500).json({ message: 'Logout failed' });
   }
 });
 

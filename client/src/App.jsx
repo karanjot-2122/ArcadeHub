@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Auth from './pages/Auth';
 import QuickPlay from './pages/QuickPlay';
+import Friends from './pages/Friends';
 import Profile from './pages/Profile';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 
@@ -30,6 +31,10 @@ function AppRoutes() {
       <Route
         path="/profile"
         element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/friends"
+        element={isAuthenticated ? <Friends /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
