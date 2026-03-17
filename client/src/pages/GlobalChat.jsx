@@ -26,6 +26,10 @@ const GlobalChat = () => {
       setConnected(false);
     });
 
+    socket.on('global-history', (history) => {
+      setMessages(history || []);
+    });
+
     socket.on('global-message', (payload) => {
       setMessages((prev) => [...prev, payload]);
     });

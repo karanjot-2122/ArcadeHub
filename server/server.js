@@ -35,6 +35,8 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 const onlineUsers = new Map(); // userId => Set(socketId)
+const globalChatHistory = [];
+const MAX_GLOBAL_MESSAGES = 50;
 
 io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token || socket.handshake.query?.token;
@@ -77,6 +79,26 @@ io.on('connection', async (socket) => {
 
   await User.findByIdAndUpdate(userId, { isOnline: true });
   await emitFriendStatus(userId, true);
+
+  // send existing global chat history to newly connected user
+  socket.emit('global-history', globalChatHistory);
+
+  socket.on('global-message', (payload) => {
+    const now = new Date();
+    const message = {
+      user: payload.user || user.username,
+      text: payload.text || '',
+      time: now.toISOString(),
+    };
+
+    // add to history ring buffer
+    globalChatHistory.push(message);
+    if (globalChatHistory.length > MAX_GLOBAL_MESSAGES) {
+      globalChatHistory.shift();
+    }
+
+    io.emit('global-message', message);
+  });
 
   socket.on('disconnect', async () => {
     const set = onlineUsers.get(userId);
