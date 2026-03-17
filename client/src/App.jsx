@@ -1,8 +1,40 @@
-import { Routes, Route } from 'react-router-dom';
+import { useContext } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import { AuthProvider } from './contexts/AuthContext';
+import Auth from './pages/Auth';
+import QuickPlay from './pages/QuickPlay';
+import Profile from './pages/Profile';
+import { AuthProvider, AuthContext } from './contexts/AuthContext';
+
+function AppRoutes() {
+  const { isAuthenticated } = useContext(AuthContext);
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={isAuthenticated ? <Navigate to="/quickplay" replace /> : <Auth initialMode="login" />}
+      />
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/quickplay" replace /> : <Auth initialMode="login" />}
+      />
+      <Route
+        path="/register"
+        element={isAuthenticated ? <Navigate to="/quickplay" replace /> : <Auth initialMode="register" />}
+      />
+      <Route
+        path="/quickplay"
+        element={isAuthenticated ? <QuickPlay /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/profile"
+        element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />}
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
@@ -10,11 +42,7 @@ function App() {
       <div className="min-h-screen bg-gray-900 text-white">
         <Navbar />
         <div className="container mx-auto mt-10 p-4">
-          <Routes>
-            <Route path="/" element={<h1 className="text-4xl text-center font-bold text-blue-400">Welcome to ArcadeHub</h1>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
+          <AppRoutes />
         </div>
       </div>
     </AuthProvider>
