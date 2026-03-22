@@ -4,11 +4,14 @@ import { AuthContext } from '../contexts/AuthContext';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useContext(AuthContext);
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const profileInitial = user?.username?.charAt(0)?.toUpperCase() || 'P';
 
   const handleLogout = () => {
     logout();
+    setMenuOpen(false);
     navigate('/login');
   };
 
@@ -34,12 +37,16 @@ const Navbar = () => {
 
       {isAuthenticated && (
         <div className="flex items-center gap-3">
+          <div className="hidden text-right sm:block">
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Signed in</p>
+            <p className="text-sm font-bold text-white">{user?.username || 'Player'}</p>
+          </div>
           <button
             onClick={() => navigate('/profile')}
-            className="w-10 h-10 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center hover:bg-blue-400 transition"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-bold hover:bg-blue-400 transition"
             aria-label="Go to Profile"
           >
-            P
+            {profileInitial}
           </button>
         </div>
       )}
@@ -73,6 +80,12 @@ const Navbar = () => {
               className="text-left px-3 py-2 hover:bg-gray-700 rounded transition"
             >
               Create / Join ROOMS
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-left px-3 py-2 text-red-300 hover:bg-gray-700 rounded transition"
+            >
+              Logout
             </button>
           </div>
         </div>

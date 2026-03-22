@@ -6,6 +6,8 @@ import QuickPlay from './pages/QuickPlay';
 import GlobalChat from './pages/GlobalChat';
 import Friends from './pages/Friends';
 import Profile from './pages/Profile';
+import Rooms from './pages/Rooms';
+import RoomLobby from './pages/RoomLobby';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 
 function AppRoutes() {
@@ -41,6 +43,14 @@ function AppRoutes() {
         path="/friends"
         element={isAuthenticated ? <Friends /> : <Navigate to="/login" replace />}
       />
+      <Route
+        path="/rooms"
+        element={isAuthenticated ? <Rooms /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/rooms/:roomCode"
+        element={isAuthenticated ? <RoomLobby /> : <Navigate to="/login" replace />}
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -49,9 +59,9 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-950 text-white">
         <Navbar />
-        <div className="container mx-auto mt-10 p-4">
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
           <AppRoutes />
         </div>
       </div>

@@ -27,7 +27,7 @@ const Profile = () => {
       <div className="flex items-center gap-4 mb-4">
         <div className="w-16 h-16 rounded-full bg-blue-500 grid place-items-center text-white font-bold text-xl">P</div>
         <div>
-          <p className="text-gray-200 font-semibold">Username: {user?.name || 'Guest'}</p>
+          <p className="text-gray-200 font-semibold">Username: {user?.username || 'Guest'}</p>
           <p className="text-gray-400">Email: {user?.email || 'Not set'}</p>
         </div>
       </div>

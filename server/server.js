@@ -27,9 +27,11 @@ app.get('/', (req, res) => {
 // Routes
 const authRoutes = require('./routes/auth');
 const friendsRoutes = require('./routes/friends');
+const roomsRoutes = require('./routes/rooms');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/rooms', roomsRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
