@@ -84,29 +84,44 @@ const GlobalChat = () => {
 };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 text-white">
-      <h1 className="text-3xl font-bold text-blue-400 mb-4">Global Chat</h1>
-      <p className="text-sm text-gray-300 mb-4">
-        Status: <span className={connected ? 'text-green-400' : 'text-red-400'}>
-          {connected ? 'Connected' : 'Disconnected'}
-        </span>
-      </p>
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-6">
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-sky-300 mb-2">Community hub</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h1 className="text-5xl font-black uppercase tracking-[0.2em] text-white drop-shadow-lg">Global Chat</h1>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 border-2 border-white/20">
+            <span className={`w-3 h-3 rounded-full ${ connected ? 'bg-lime-400 shadow-lg shadow-lime-400/50' : 'bg-red-400'}`}></span>
+            <span className={`text-sm font-bold uppercase tracking-wider ${ connected ? 'text-lime-300' : 'text-red-300'}`}>
+              {connected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <div className="h-80 overflow-y-auto border border-gray-700 rounded-lg bg-gray-900 p-4 mb-4">
-        {messages.map((m, idx) => {
-          const isSelf = m.user === (user?.username || '');
-          return (
-            <div key={`${m.user}-${idx}-${m.time}`} className={`mb-2 flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-2 rounded-lg ${isSelf ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'}`}>
-                <div className="text-xs text-gray-200 mb-1 flex items-center justify-between gap-4">
-                  <span className="font-bold">{m.user}</span>
-                  <span>{formatTime(m.time)}</span>
-                </div>
-                <div className="break-words">{m.text}</div>
-              </div>
+      <div className="h-96 overflow-y-auto border-2 border-lime-300/30 rounded-2xl bg-gradient-to-b from-gray-950 to-black p-6 mb-4 shadow-xl">
+        {messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-gray-500 text-center">
+            <div>
+              <p className="text-3xl mb-2">💬</p>
+              <p className="font-semibold">No messages yet. Start the conversation!</p>
             </div>
-          );
-        })}
+          </div>
+        ) : (
+          messages.map((m, idx) => {
+            const isSelf = m.user === (user?.username || '');
+            return (
+              <div key={`${m.user}-${idx}-${m.time}`} className={`mb-3 flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] p-3 rounded-xl ${ isSelf ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-800/80 text-gray-100 border border-gray-700'}`}>
+                  <div className="text-xs font-bold text-gray-200 mb-1 flex items-center justify-between gap-3">
+                    <span>{isSelf ? '👤 You' : m.user}</span>
+                    <span className="text-gray-300/70">{formatTime(m.time)}</span>
+                  </div>
+                  <div className="break-words text-sm">{m.text}</div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <div className="flex gap-2">
@@ -115,14 +130,14 @@ const GlobalChat = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-          className="flex-1 p-2 rounded border border-gray-700 bg-gray-800 focus:outline-none focus:border-blue-500"
-          placeholder="Type a message..."
+          className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-700 bg-gray-900 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white font-semibold placeholder:text-gray-500 transition-all"
+          placeholder="Type a message and press Enter..."
         />
         <button 
           onClick={sendMessage} 
-          className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500 transition-colors"
+          className="px-6 py-3 bg-gradient-to-r from-lime-400 to-green-400 hover:from-lime-300 hover:to-green-300 text-black rounded-xl font-black uppercase tracking-wider shadow-lg transition-all hover:shadow-[0_0_20px_rgba(205,220,57,0.5)]"
         >
-          Send
+          📤 Send
         </button>
       </div>
     </div>

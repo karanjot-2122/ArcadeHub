@@ -91,45 +91,45 @@ const Auth = ({ initialMode = 'login' }) => {
     ? `${tabCommon} bg-emerald-500 text-white shadow-lg` : `${tabCommon} bg-gray-700 text-gray-300 hover:bg-gray-600`;
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-slate-900 via-gray-900 to-black p-4">
-      <div className="w-full max-w-xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-800">
-        <div className="flex justify-center bg-gray-850 rounded-t-2xl border-b border-gray-700">
-          <button onClick={() => { setMode('login'); setError(''); setRegisterStep(1); }} className={loginTabClass}>
-            Login
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-slate-950 via-black to-slate-900 p-4">
+      <div className="w-full max-w-xl bg-gradient-to-b from-gray-950 to-black rounded-3xl shadow-2xl border-2 border-lime-300/30">
+        <div className="flex justify-center bg-gradient-to-r from-indigo-700 to-blue-700 rounded-t-2xl border-b-4 border-lime-300 p-1 gap-1">
+          <button onClick={() => { setMode('login'); setError(''); setRegisterStep(1); }} className={`flex-1 px-6 py-3.5 rounded-lg font-black text-sm tracking-wider transition-all ${mode === 'login' ? 'bg-lime-300 text-black shadow-lg shadow-lime-300/50' : 'bg-black/40 text-white hover:bg-black/60'}`}>
+            LOGIN
           </button>
-          <button onClick={() => { setMode('register'); setError(''); setRegisterStep(1); }} className={signupTabClass}>
-            Sign Up
+          <button onClick={() => { setMode('register'); setError(''); setRegisterStep(1); }} className={`flex-1 px-6 py-3.5 rounded-lg font-black text-sm tracking-wider transition-all ${mode === 'register' ? 'bg-lime-300 text-black shadow-lg shadow-lime-300/50' : 'bg-black/40 text-white hover:bg-black/60'}`}>
+            SIGN UP
           </button>
         </div>
 
-        <div className="p-8">
-          <h2 className={`text-3xl font-bold mb-5 text-center ${mode === 'login' ? 'text-indigo-400' : 'text-emerald-400'}`}>
-            {mode === 'login' ? 'Welcome Back' : 'Create your account'}
+        <div className="p-10">
+          <h2 className={`text-4xl font-black mb-6 text-center tracking-wider drop-shadow-lg ${mode === 'login' ? 'bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent' : 'bg-gradient-to-r from-lime-300 to-green-300 bg-clip-text text-transparent'}`}>
+            {mode === 'login' ? 'WELCOME BACK' : 'JOIN THE ARCADE'}
           </h2>
 
-          {error && <p className="mb-4 text-center text-red-300 font-medium">{error}</p>}
+          {error && <div className="mb-4 text-center rounded-xl bg-red-600/20 border border-red-400/50 px-4 py-3 text-red-200 font-bold text-sm">{error}</div>}
 
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <input
                 type="email"
                 value={loginData.email}
-                placeholder="Email"
-                className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-indigo-500 outline-none"
+                placeholder="EMAIL"
+                className="w-full px-4 py-3 bg-gray-900 rounded-lg border-2 border-gray-700 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white placeholder:text-gray-500 font-semibold transition-all"
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
               />
               <input
                 type="password"
                 value={loginData.password}
-                placeholder="Password"
-                className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-indigo-500 outline-none"
+                placeholder="PASSWORD"
+                className="w-full px-4 py-3 bg-gray-900 rounded-lg border-2 border-gray-700 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white placeholder:text-gray-500 font-semibold transition-all"
                 onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
               />
               <button
                 type="submit"
-                className={`w-full p-3 rounded font-bold ${shake ? 'shake bg-red-500' : 'bg-indigo-600 hover:bg-indigo-700'} transition duration-300`}
+                className={`w-full py-3 rounded-lg font-black text-lg tracking-wider transition-all ${shake ? 'shake bg-red-600 text-white' : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg'}`}
               >
-                Login
+                LOGIN
               </button>
             </form>
           ) : (
@@ -139,15 +139,15 @@ const Auth = ({ initialMode = 'login' }) => {
                   <input
                     type="text"
                     value={registerData.username}
-                    placeholder="Name"
-                    className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-emerald-500 outline-none"
+                    placeholder="USERNAME"
+                    className="w-full px-4 py-3 bg-gray-900 rounded-lg border-2 border-gray-700 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white placeholder:text-gray-500 font-semibold transition-all"
                     onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
                   />
                   <input
                     type="email"
                     value={registerData.email}
-                    placeholder="Email"
-                    className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-emerald-500 outline-none"
+                    placeholder="EMAIL"
+                    className="w-full px-4 py-3 bg-gray-900 rounded-lg border-2 border-gray-700 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white placeholder:text-gray-500 font-semibold transition-all"
                     onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                   />
                 </>
@@ -155,30 +155,30 @@ const Auth = ({ initialMode = 'login' }) => {
                 <input
                   type="password"
                   value={registerData.password}
-                  placeholder="Password"
-                  className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-emerald-500 outline-none"
+                  placeholder="PASSWORD"
+                  className="w-full px-4 py-3 bg-gray-900 rounded-lg border-2 border-gray-700 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30 outline-none text-white placeholder:text-gray-500 font-semibold transition-all"
                   onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                 />
               )}
 
               {registerStep === 2 && (
-                <div className="text-sm text-slate-300">Almost there! Enter your password and hit Sign Up.</div>
+                <div className="text-sm text-lime-300 font-semibold bg-lime-300/10 rounded-lg p-3 border border-lime-300/30">✨ Almost there! Now enter your password and hit SIGN UP.</div>
               )}
 
               <button
                 type="submit"
-                className={`w-full p-3 rounded font-bold ${shake ? 'shake bg-red-500' : 'bg-emerald-600 hover:bg-emerald-700'} transition duration-300`}
+                className={`w-full py-3 rounded-lg font-black text-lg tracking-wider transition-all ${shake ? 'shake bg-red-600 text-white' : 'bg-gradient-to-r from-lime-400 to-green-400 hover:from-lime-300 hover:to-green-300 text-black shadow-lg'}`}
               >
-                {registerStep === 1 ? 'Next' : 'Sign Up'}
+                {registerStep === 1 ? 'NEXT' : 'SIGN UP'}
               </button>
 
               {registerStep === 2 && (
                 <button
                   type="button"
                   onClick={() => setRegisterStep(1)}
-                  className="w-full p-2 text-center text-sm text-slate-300 hover:text-white"
+                  className="w-full p-2 text-center text-sm text-white/70 hover:text-white font-semibold"
                 >
-                  Back
+                  ← BACK
                 </button>
               )}
             </form>

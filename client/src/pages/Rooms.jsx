@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { gameCatalog } from '../services/gameCatalog';
@@ -9,15 +9,9 @@ const Rooms = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState(location.state?.defaultMode || 'create');
-  const [selectedGameId, setSelectedGameId] = useState(location.state?.selectedGameId || gameCatalog[0]?.id || '');
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const selectedGame = useMemo(
-    () => gameCatalog.find((game) => game.id === selectedGameId),
-    [selectedGameId],
-  );
 
   const handleCreateRoom = async (gameId) => {
     if (!gameId) {
@@ -25,7 +19,6 @@ const Rooms = () => {
       return;
     }
 
-    setSelectedGameId(gameId);
     setError('');
     setIsSubmitting(true);
 
@@ -60,19 +53,26 @@ const Rooms = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-b from-slate-950 via-black to-slate-950 p-6 shadow-2xl md:p-10">
-      <div className="mx-auto flex w-full max-w-md rounded-2xl border border-white/15 bg-white/5 p-1">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 rounded-[2rem] border-2 border-lime-300/40 bg-gradient-to-b from-slate-950 via-black to-slate-950 p-6 shadow-2xl md:p-10">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-lime-300 mb-3">Game Rooms</p>
+        <h1 className="text-5xl md:text-6xl font-black uppercase tracking-[0.2em] text-white drop-shadow-lg mb-4">Private Rooms</h1>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-md rounded-2xl border-2 border-lime-300/40 bg-black/50 p-1.5 gap-1.5">
         <button
           type="button"
           onClick={() => {
             setMode('create');
             setError('');
           }}
-          className={`flex-1 rounded-xl px-5 py-3 text-sm font-black tracking-[0.25em] transition ${
-            mode === 'create' ? 'bg-lime-300 text-black' : 'text-white hover:bg-white/10'
+          className={`flex-1 rounded-xl px-5 py-4 text-sm font-black tracking-[0.25em] transition-all ${
+            mode === 'create'
+              ? 'bg-gradient-to-r from-lime-300 to-green-300 text-black shadow-lg shadow-lime-300/50'
+              : 'bg-black/40 text-white hover:bg-lime-300/10'
           }`}
         >
-          CREATE ROOM
+          🎮 CREATE
         </button>
         <button
           type="button"
@@ -80,74 +80,77 @@ const Rooms = () => {
             setMode('join');
             setError('');
           }}
-          className={`flex-1 rounded-xl px-5 py-3 text-sm font-black tracking-[0.25em] transition ${
-            mode === 'join' ? 'bg-lime-300 text-black' : 'text-white hover:bg-white/10'
+          className={`flex-1 rounded-xl px-5 py-4 text-sm font-black tracking-[0.25em] transition-all ${
+            mode === 'join'
+              ? 'bg-gradient-to-r from-lime-300 to-green-300 text-black shadow-lg shadow-lime-300/50'
+              : 'bg-black/40 text-white hover:bg-lime-300/10'
           }`}
         >
-          JOIN ROOM
+          📝 JOIN
         </button>
       </div>
 
-      <div className={`grid gap-8 ${mode === 'join' ? 'lg:grid-cols-[1.3fr_0.9fr]' : ''}`}>
-        <section className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 md:p-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">Private rooms</p>
-          <h1 className="text-4xl font-black uppercase tracking-[0.18em] text-white md:text-5xl">
-            {mode === 'create' ? 'Choose your game' : 'Enter room code'}
-          </h1>
+      <div>
+        <section className="rounded-[2rem] border-2 border-white/10 bg-white/5 p-6 md:p-8 backdrop-blur-sm">
+          <p className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-lime-300">Setup</p>
+          <h2 className="text-4xl font-black uppercase tracking-[0.18em] text-white md:text-5xl drop-shadow-lg">
+            {mode === 'create' ? '🕹️ Select Your Game' : '🔐 Enter Room Code'}
+          </h2>
           <p className="mt-4 max-w-2xl text-sm text-slate-300 md:text-base">
             {mode === 'create'
-              ? 'Click a game card to create the room instantly and become the room leader automatically.'
-              : 'Use a valid joining code to enter an existing room and wait for the leader to start the match.'}
+              ? '⚡ Click a game to create the room instantly and become the room leader automatically.'
+              : '📍 Use a valid joining code to enter an existing room and wait for the leader to start the match.'}
           </p>
 
           {mode === 'create' ? (
             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {gameCatalog.map((game) => {
-                const isActive = game.id === selectedGameId;
-
                 return (
                   <button
                     key={game.id}
                     type="button"
                     onClick={() => handleCreateRoom(game.id)}
                     disabled={isSubmitting}
-                    className={`rounded-[1.5rem] border p-5 text-left transition ${
-                      isActive
-                        ? 'border-lime-300 bg-lime-300/10 shadow-[0_0_0_1px_rgba(190,242,100,0.35)]'
-                        : 'border-white/10 bg-black/30 hover:border-sky-300/50 hover:bg-white/10'
-                    } disabled:cursor-not-allowed disabled:opacity-70`}
+                    className={`relative group rounded-[1.75rem] border-2 p-6 text-left transition-all duration-300 overflow-hidden ${
+                      isSubmitting
+                        ? 'border-orange-400/50 bg-gradient-to-br from-orange-900/40 to-orange-800/40 shadow-xl shadow-orange-600/20'
+                        : 'border-gray-700 bg-gradient-to-br from-gray-900/60 to-black/60 hover:border-lime-300 hover:shadow-[0_0_20px_rgba(205,220,57,0.4)]'
+                    }`}
                   >
-                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${game.accent} text-2xl shadow-lg`}>
-                      {game.icon}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative z-10">
+                      <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${game.accent} text-3xl shadow-lg mb-4`}>
+                        {game.icon}
+                      </div>
+                      <h3 className="text-lg font-black uppercase tracking-[0.12em] text-white">{game.name}</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">{game.description}</p>
+                      <p className="mt-4 text-xs font-bold uppercase tracking-[0.25em] text-lime-300">
+                        {isSubmitting ? '⏳ Creating room...' : '✨ Click to create'}
+                      </p>
                     </div>
-                    <h2 className="mt-4 text-lg font-black uppercase tracking-[0.12em] text-white">{game.name}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">{game.description}</p>
-                    <p className="mt-4 text-xs font-bold uppercase tracking-[0.25em] text-sky-300">
-                      {isSubmitting && isActive ? 'Creating room...' : 'Click to create room'}
-                    </p>
                   </button>
                 );
               })}
             </div>
           ) : (
             <div className="mt-10 max-w-xl">
-              <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">
-                Joining code
+              <label className="mb-4 block text-xs font-black uppercase tracking-[0.35em] text-lime-300">
+                🔑 Enter Room Code
               </label>
               <input
                 type="text"
                 value={roomCode}
                 onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
-                placeholder="ROOM CODE"
-                className="w-full rounded-full border border-white/15 bg-white px-6 py-4 text-center text-xl font-black uppercase tracking-[0.3em] text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-sky-300 focus:ring-2 focus:ring-sky-300/30"
+                placeholder="ENTER CODE"
+                className="w-full rounded-full border-2 border-lime-300/30 bg-gray-900 px-6 py-5 text-center text-2xl font-black uppercase tracking-[0.4em] text-white outline-none transition placeholder:text-gray-600 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/40"
                 maxLength={6}
               />
             </div>
           )}
 
           {error && (
-            <div className="mt-6 rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              {error}
+            <div className="mt-6 rounded-2xl border-2 border-red-400/50 bg-red-600/20 px-5 py-4 text-sm font-semibold text-red-200">
+              ⚠️ {error}
             </div>
           )}
 
@@ -157,45 +160,13 @@ const Rooms = () => {
                 type="button"
                 onClick={handleJoinRoom}
                 disabled={isSubmitting}
-                className="rounded-full border-4 border-white/80 bg-indigo-700 px-10 py-4 text-lg font-black uppercase tracking-[0.2em] text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full border-4 border-lime-300/60 bg-gradient-to-r from-indigo-700 to-blue-700 hover:from-indigo-600 hover:to-blue-600 px-10 py-5 text-lg font-black uppercase tracking-[0.25em] text-white transition-all hover:shadow-[0_0_25px_rgba(205,220,57,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? 'PLEASE WAIT' : 'JOIN ROOM'}
+                {isSubmitting ? '⏳ Joining...' : '📍 Join Room'}
               </button>
             </div>
-          )}
+          )}}
         </section>
-
-        {mode === 'join' && (
-          <aside className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">Room preview</p>
-            <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-black/40 p-6">
-              <div className={`inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br ${selectedGame?.accent || 'from-slate-600 to-slate-800'} text-3xl shadow-xl`}>
-                {selectedGame?.icon || '🎮'}
-              </div>
-              <h2 className="mt-5 text-3xl font-black uppercase tracking-[0.12em] text-white">
-                Ready to join
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                Paste the room code shared by the leader and jump straight into the waiting room.
-              </p>
-            </div>
-
-            <div className="mt-8 space-y-4 rounded-[1.5rem] border border-white/10 bg-black/30 p-5 text-sm text-slate-300">
-              <div className="flex items-center justify-between gap-4">
-                <span className="uppercase tracking-[0.25em] text-slate-400">Leader</span>
-                <span className="font-bold text-white">Unknown</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="uppercase tracking-[0.25em] text-slate-400">Visibility</span>
-                <span className="font-bold text-white">Private room</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="uppercase tracking-[0.25em] text-slate-400">Capacity</span>
-                <span className="font-bold text-white">10 players</span>
-              </div>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );

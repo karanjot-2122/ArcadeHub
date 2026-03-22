@@ -16,34 +16,34 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative flex justify-between items-center p-4 bg-gray-900 border-b border-gray-800 text-white shadow-xl">
-      <div className="flex items-center gap-3">
+    <nav className="relative flex justify-between items-center bg-gradient-to-r from-sky-400 via-sky-350 to-sky-400 px-6 py-4 text-black shadow-2xl border-b-4 border-sky-300">
+      <div className="flex items-center gap-4">
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="p-2 rounded-md bg-gray-800 hover:bg-gray-700 transition"
+          className="p-2 rounded-md bg-black/20 hover:bg-black/40 transition"
           aria-label="Open menu"
         >
-          <span className="block w-5 h-0.5 bg-white mb-1"></span>
-          <span className="block w-5 h-0.5 bg-white mb-1"></span>
-          <span className="block w-5 h-0.5 bg-white"></span>
+          <span className="block w-5 h-0.5 bg-black mb-1"></span>
+          <span className="block w-5 h-0.5 bg-black mb-1"></span>
+          <span className="block w-5 h-0.5 bg-black"></span>
         </button>
         <Link
           to={isAuthenticated ? '/quickplay' : '/'}
-          className="text-2xl font-bold tracking-widest text-blue-500 hover:text-blue-400 transition"
+          className="text-4xl font-black tracking-[0.3em] text-black drop-shadow-lg hover:drop-shadow-2xl transition"
         >
-          ARCADE<span className="text-white">HUB</span>
+          ARCADE<span className="text-sky-600">HUB</span>
         </Link>
       </div>
 
       {isAuthenticated && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="hidden text-right sm:block">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Signed in</p>
-            <p className="text-sm font-bold text-white">{user?.username || 'Player'}</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-black/70 font-bold">Signed in</p>
+            <p className="text-sm font-black text-black drop-shadow-sm">{user?.username || 'Player'}</p>
           </div>
           <button
             onClick={() => navigate('/profile')}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-bold hover:bg-blue-400 transition"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white font-black text-lg hover:shadow-lg hover:from-orange-300 transition-all shadow-md"
             aria-label="Go to Profile"
           >
             {profileInitial}
@@ -52,40 +52,41 @@ const Navbar = () => {
       )}
 
       {menuOpen && (
-        <div className="absolute top-full left-0 mt-1 w-56 rounded-md bg-gray-800 border border-gray-700 shadow-xl z-20">
+        <div className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-gradient-to-b from-gray-950 to-black border-2 border-lime-300/40 shadow-2xl z-20">
           <div className="flex flex-col p-2 gap-1">
             <button
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/global-chat');
               }}
-              className="text-left px-3 py-2 hover:bg-gray-700 rounded transition"
+              className="text-left px-4 py-3 hover:bg-lime-300/20 rounded-lg transition text-white font-semibold hover:text-lime-300"
             >
-              GLOBAL CHAT
+              💬 GLOBAL CHAT
             </button>
             <button
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/friends');
               }}
-              className="text-left px-3 py-2 hover:bg-gray-700 rounded transition"
+              className="text-left px-4 py-3 hover:bg-lime-300/20 rounded-lg transition text-white font-semibold hover:text-lime-300"
             >
-              Friends
+              👥 FRIENDS
             </button>
             <button
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/rooms');
               }}
-              className="text-left px-3 py-2 hover:bg-gray-700 rounded transition"
+              className="text-left px-4 py-3 hover:bg-lime-300/20 rounded-lg transition text-white font-semibold hover:text-lime-300"
             >
-              Create / Join ROOMS
+              🎮 CREATE / JOIN ROOMS
             </button>
+            <div className="border-t border-white/10 my-2"></div>
             <button
               onClick={handleLogout}
-              className="text-left px-3 py-2 text-red-300 hover:bg-gray-700 rounded transition"
+              className="text-left px-4 py-3 text-red-300 hover:bg-red-600/30 rounded-lg transition font-semibold hover:text-red-100 w-full"
             >
-              Logout
+              🚪 LOGOUT
             </button>
           </div>
         </div>

@@ -1,0 +1,165 @@
+/* QuickPlay Theme - Lime & Black */
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(205, 220, 57, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(205, 220, 57, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(205, 220, 57, 0.3);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Game card animations */
+.game-card {
+  animation: slide-in-up 0.5s ease-out;
+}
+
+.game-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.game-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.game-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.game-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.game-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.game-card:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+.game-card:nth-child(7) {
+  animation-delay: 0.7s;
+}
+
+.game-card:nth-child(8) {
+  animation-delay: 0.8s;
+}
+
+/* Icon glow effect */
+.icon-badge {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.icon-badge:hover {
+  animation: glow-pulse 1s ease-in-out infinite;
+}
+
+/* Lime neon glow on active */
+.lime-glow {
+  text-shadow: 0 0 10px rgba(205, 220, 57, 0.5);
+}
+
+.lime-glow-intense {
+  text-shadow: 0 0 20px rgba(205, 220, 57, 0.8), 0 0 40px rgba(205, 220, 57, 0.4);
+}
+
+/* Background gradient animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-bg {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Lime border glow */
+.lime-border-glow {
+  border-color: rgba(205, 220, 57, 0.3);
+  transition: all 0.3s ease;
+}
+
+.lime-border-glow:hover {
+  border-color: rgba(205, 220, 57, 0.8);
+  box-shadow: 0 0 20px rgba(205, 220, 57, 0.5), inset 0 0 20px rgba(205, 220, 57, 0.1);
+}
+
+/* Play button shimmer effect */
+.play-button-shimmer {
+  background: linear-gradient(
+    90deg,
+    #cddc39 0%,
+    #d4e157 25%,
+    #cddc39 50%,
+    #d4e157 75%,
+    #cddc39 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Disabled state */
+.card-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Responsive effects */
+@media (hover: hover) {
+  .game-card:hover {
+    animation: float 2s ease-in-out infinite;
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .game-card {
+    animation-delay: 0 !important;
+  }
+
+  .game-card:nth-child(n) {
+    animation-delay: 0 !important;
+  }
+}
