@@ -19,6 +19,9 @@ const Friends = () => {
     try {
       const res = await axios.get('http://localhost:5000/api/friends', axiosConfig);
       setFriends(res.data.friends || []);
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('request-friends-online-snapshot');
+      }
     } catch (err) {
       console.error('fetch friends error', err);
     }
@@ -40,8 +43,17 @@ const Friends = () => {
 
     socketRef.current = io('http://localhost:5000', { auth: { token: `Bearer ${token}` } });
 
+    socketRef.current.on('connect', () => {
+      socketRef.current.emit('request-friends-online-snapshot');
+    });
+
+    socketRef.current.on('friends-online-snapshot', ({ onlineFriendIds = [] }) => {
+      const onlineSet = new Set(onlineFriendIds.map(String));
+      setFriends((prev) => prev.map((f) => ({ ...f, isOnline: onlineSet.has(String(f.id)) })));
+    });
+
     socketRef.current.on('friend-status', ({ userId, isOnline }) => {
-      setFriends((prev) => prev.map((f) => (f.id === userId ? { ...f, isOnline } : f)));
+      setFriends((prev) => prev.map((f) => (String(f.id) === String(userId) ? { ...f, isOnline } : f)));
     });
 
     return () => {

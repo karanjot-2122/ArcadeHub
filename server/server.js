@@ -82,6 +82,22 @@ io.on('connection', async (socket) => {
   await User.findByIdAndUpdate(userId, { isOnline: true });
   await emitFriendStatus(userId, true);
 
+  const emitFriendsOnlineSnapshot = async () => {
+    const freshUser = await User.findById(userId).populate('friends', '_id');
+    if (!freshUser) return;
+
+    const onlineFriendIds = freshUser.friends
+      .map((friend) => friend._id.toString())
+      .filter((friendId) => {
+        const sockets = onlineUsers.get(friendId);
+        return sockets && sockets.size > 0;
+      });
+
+    socket.emit('friends-online-snapshot', { onlineFriendIds });
+  };
+
+  await emitFriendsOnlineSnapshot();
+
   // send existing global chat history to newly connected user
   socket.emit('global-history', globalChatHistory);
 
@@ -100,6 +116,10 @@ io.on('connection', async (socket) => {
     }
 
     io.emit('global-message', message);
+  });
+
+  socket.on('request-friends-online-snapshot', async () => {
+    await emitFriendsOnlineSnapshot();
   });
 
   socket.on('disconnect', async () => {
