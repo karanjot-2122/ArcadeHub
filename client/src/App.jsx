@@ -8,7 +8,7 @@ import Friends from './pages/Friends';
 import Profile from './pages/Profile';
 import Rooms from './pages/Rooms';
 import RoomLobby from './pages/RoomLobby';
-import AgarIOGame from './pages/AgarIOGame';
+import GameRuntime from './pages/GameRuntime';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 
 function AppRoutes() {
@@ -54,7 +54,7 @@ function AppRoutes() {
       />
       <Route
         path="/game/:roomCode"
-        element={isAuthenticated ? <AgarIOGame /> : <Navigate to="/login" replace />}
+        element={isAuthenticated ? <GameRuntime /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

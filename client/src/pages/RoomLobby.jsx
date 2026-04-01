@@ -33,7 +33,7 @@ const RoomLobby = () => {
 
   // Auto-navigate to game when the leader starts the room
   useEffect(() => {
-    if (room?.status === 'starting' && room?.gameId === 'agar-io') {
+    if (room?.status === 'starting' && room?.gameId) {
       const timer = setTimeout(() => {
         navigate(`/game/${room.code}`);
       }, 1200);

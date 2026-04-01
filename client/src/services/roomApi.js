@@ -43,3 +43,8 @@ export const sendGameInput = async (token, code, input) => {
   const response = await axios.post(`${API_BASE_URL}/${code}/game/input`, input, buildHeaders(token));
   return response.data;
 };
+
+export const sendGameMove = async (token, code, payload) => {
+  const response = await axios.post(`${API_BASE_URL}/${code}/game/move`, payload, buildHeaders(token));
+  return response.data;
+};
