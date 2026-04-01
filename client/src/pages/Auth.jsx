@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Auth = ({ initialMode = 'login' }) => {
   const [mode, setMode] = useState(initialMode);
   const [error, setError] = useState('');
@@ -36,7 +38,7 @@ const Auth = ({ initialMode = 'login' }) => {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', loginData);
+      const res = await axios.post(`${API_URL}/api/auth/login`, loginData);
       auth.login(res.data.token, res.data.user);
       setError('');
       navigate('/quickplay');
@@ -72,7 +74,7 @@ const Auth = ({ initialMode = 'login' }) => {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/auth/register', registerData);
+      await axios.post(`${API_URL}/api/auth/register`, registerData);
       setError('Registration successful! Please login.');
       setMode('login');
       setRegisterStep(1);

@@ -2,6 +2,8 @@ import { useEffect, useState, useContext, useRef } from 'react';
 import io from 'socket.io-client';
 import { AuthContext } from '../contexts/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const GlobalChat = () => {
   const { user, token } = useContext(AuthContext);
   const [message, setMessage] = useState('');
@@ -12,7 +14,7 @@ const GlobalChat = () => {
   useEffect(() => {
     if (!token || !user) return;
 
-    const socket = io('http://localhost:5000', {
+    const socket = io(API_URL, {
       auth: { token: `Bearer ${token}` },
     });
 

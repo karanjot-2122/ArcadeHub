@@ -3,6 +3,8 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import { AuthContext } from '../contexts/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Friends = () => {
   const { token } = useContext(AuthContext);
   const [search, setSearch] = useState('');
@@ -17,7 +19,7 @@ const Friends = () => {
 
   const fetchFriends = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/friends', axiosConfig);
+      const res = await axios.get(`${API_URL}/api/friends`, axiosConfig);
       setFriends(res.data.friends || []);
       if (socketRef.current?.connected) {
         socketRef.current.emit('request-friends-online-snapshot');
@@ -29,7 +31,7 @@ const Friends = () => {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/friends/requests', axiosConfig);
+      const res = await axios.get(`${API_URL}/api/friends/requests`, axiosConfig);
       setRequests(res.data.requests || []);
     } catch (err) {
       console.error('fetch requests error', err);
@@ -41,7 +43,7 @@ const Friends = () => {
     fetchFriends();
     fetchRequests();
 
-    socketRef.current = io('http://localhost:5000', { auth: { token: `Bearer ${token}` } });
+    socketRef.current = io(API_URL, { auth: { token: `Bearer ${token}` } });
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('request-friends-online-snapshot');
@@ -65,7 +67,7 @@ const Friends = () => {
     if (!search.trim()) return;
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:5000/api/friends/search?q=${encodeURIComponent(search)}`, axiosConfig);
+      const res = await axios.get(`${API_URL}/api/friends/search?q=${encodeURIComponent(search)}`, axiosConfig);
       setSearchResults(res.data);
     } catch (err) {
       console.error('search error', err);
@@ -77,7 +79,7 @@ const Friends = () => {
 
   const sendRequest = async (targetUsername) => {
     try {
-      await axios.post('http://localhost:5000/api/friends/request', { username: targetUsername }, axiosConfig);
+      await axios.post(`${API_URL}/api/friends/request`, { username: targetUsername }, axiosConfig);
       setStatusMsg('Friend request sent');
       setSearchResults((prev) => prev.filter((p) => p.username !== targetUsername));
     } catch (err) {
@@ -87,7 +89,7 @@ const Friends = () => {
 
   const acceptRequest = async (id) => {
     try {
-      await axios.post(`http://localhost:5000/api/friends/request/${id}/accept`, {}, axiosConfig);
+      await axios.post(`${API_URL}/api/friends/request/${id}/accept`, {}, axiosConfig);
       setStatusMsg('Friend request accepted');
       fetchFriends();
       fetchRequests();
@@ -98,7 +100,7 @@ const Friends = () => {
 
   const rejectRequest = async (id) => {
     try {
-      await axios.post(`http://localhost:5000/api/friends/request/${id}/reject`, {}, axiosConfig);
+      await axios.post(`${API_URL}/api/friends/request/${id}/reject`, {}, axiosConfig);
       setStatusMsg('Friend request rejected');
       fetchRequests();
     } catch (err) {
