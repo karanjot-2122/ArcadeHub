@@ -27,9 +27,19 @@ const RoomLobby = () => {
   useEffect(() => {
     fetchRoom();
 
-    const intervalId = window.setInterval(fetchRoom, 3000);
+    const intervalId = window.setInterval(fetchRoom, 2000);
     return () => window.clearInterval(intervalId);
   }, [fetchRoom]);
+
+  // Auto-navigate to game when the leader starts the room
+  useEffect(() => {
+    if (room?.status === 'starting' && room?.gameId === 'agar-io') {
+      const timer = setTimeout(() => {
+        navigate(`/game/${room.code}`);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [room?.status, room?.gameId, room?.code, navigate]);
 
   const game = useMemo(() => getGameById(room?.gameId), [room?.gameId]);
   const isLeader = Boolean(room && user && room.leaderId === user.id);

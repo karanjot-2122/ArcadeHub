@@ -1,10 +1,10 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const { rooms } = require('../store/index');
 
 const router = express.Router();
 
 const ROOM_CAPACITY = 10;
-const rooms = new Map();
 const GAME_MAP = {
   'agar-io': 'AGAR.IO',
   'particle-war': 'PARTICLE WAR',

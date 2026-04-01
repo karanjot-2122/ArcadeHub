@@ -5,6 +5,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const { rooms, activeGames } = require('./store/index');
+const AgarIO = require('./games/AgarIO');
 require('dotenv').config();
 
 const app = express();
@@ -120,6 +122,49 @@ io.on('connection', async (socket) => {
 
   socket.on('request-friends-online-snapshot', async () => {
     await emitFriendsOnlineSnapshot();
+  });
+
+  // ── Game events ──────────────────────────────────────────────────────────
+
+  socket.on('join-game-room', ({ roomCode, gameId }) => {
+    const code = String(roomCode || '').trim().toUpperCase();
+    socket.join(`game:${code}`);
+
+    // Determine which game to run (client tells us, or fall back to room data)
+    const room = rooms.get(code);
+    const resolvedGameId = gameId || room?.gameId || 'agar-io';
+    if (resolvedGameId !== 'agar-io') return;
+
+    if (!activeGames.has(code)) {
+      // Use room players list if available, otherwise seed with the connecting player
+      const players = room ? room.players : [{ id: userId, username: user.username }];
+      const game = new AgarIO(code, players);
+      activeGames.set(code, game);
+      game.start((state) => {
+        io.to(`game:${code}`).emit('game-state', state);
+      });
+      console.log(`[game] Started Agar.IO for room ${code}`);
+    } else {
+      // Game already running — add this player if they aren't tracked yet
+      const game = activeGames.get(code);
+      if (!game.players.has(userId)) {
+        game._addPlayer(userId, user.username, game.players.size);
+        console.log(`[game] Added late-joiner ${user.username} to room ${code}`);
+      }
+    }
+  });
+
+  socket.on('player-input', ({ roomCode, dx, dy }) => {
+    const code = String(roomCode || '').trim().toUpperCase();
+    const game = activeGames.get(code);
+    if (game) {
+      game.updateInput(userId, Number(dx) || 0, Number(dy) || 0);
+    }
+  });
+
+  socket.on('leave-game-room', ({ roomCode }) => {
+    const code = String(roomCode || '').trim().toUpperCase();
+    socket.leave(`game:${code}`);
   });
 
   socket.on('disconnect', async () => {

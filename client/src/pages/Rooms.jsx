@@ -165,7 +165,7 @@ const Rooms = () => {
                 {isSubmitting ? '⏳ Joining...' : '📍 Join Room'}
               </button>
             </div>
-          )}}
+          )}
         </section>
       </div>
     </div>
