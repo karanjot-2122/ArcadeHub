@@ -126,32 +126,37 @@ io.on('connection', async (socket) => {
 
   // ── Game events ──────────────────────────────────────────────────────────
 
-  socket.on('join-game-room', ({ roomCode, gameId }) => {
+  socket.on('join-game-room', ({ roomCode }) => {
     const code = String(roomCode || '').trim().toUpperCase();
-    socket.join(`game:${code}`);
+    const socketRoom = `game:${code}`;
+    socket.join(socketRoom);
 
-    // Determine which game to run (client tells us, or fall back to room data)
-    const room = rooms.get(code);
-    const resolvedGameId = gameId || room?.gameId || 'agar-io';
-    if (resolvedGameId !== 'agar-io') return;
+    let game = activeGames.get(code);
 
-    if (!activeGames.has(code)) {
-      // Use room players list if available, otherwise seed with the connecting player
-      const players = room ? room.players : [{ id: userId, username: user.username }];
-      const game = new AgarIO(code, players);
+    if (!game) {
+      const room = rooms.get(code);
+      if (!room) {
+        socket.emit('game-error', { message: 'Room not found on server. Recreate the room.' });
+        return;
+      }
+
+      // Only agar-io is implemented
+      if (room.gameId !== 'agar-io') {
+        socket.emit('game-error', { message: 'Only AGAR.IO is currently playable.' });
+        return;
+      }
+
+      game = new AgarIO(code, room.players);
       activeGames.set(code, game);
       game.start((state) => {
-        io.to(`game:${code}`).emit('game-state', state);
+        io.to(socketRoom).emit('game-state', state);
       });
       console.log(`[game] Started Agar.IO for room ${code}`);
-    } else {
-      // Game already running — add this player if they aren't tracked yet
-      const game = activeGames.get(code);
-      if (!game.players.has(userId)) {
-        game._addPlayer(userId, user.username, game.players.size);
-        console.log(`[game] Added late-joiner ${user.username} to room ${code}`);
-      }
     }
+
+    // Push an immediate snapshot so new clients never stay in a loading state
+    const currentState = game.tick();
+    socket.emit('game-state', currentState);
   });
 
   socket.on('player-input', ({ roomCode, dx, dy }) => {

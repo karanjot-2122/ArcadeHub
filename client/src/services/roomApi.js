@@ -28,3 +28,18 @@ export const startRoom = async (token, code) => {
   const response = await axios.post(`${API_BASE_URL}/${code}/start`, {}, buildHeaders(token));
   return response.data;
 };
+
+export const bootstrapGame = async (token, code) => {
+  const response = await axios.post(`${API_BASE_URL}/${code}/game/bootstrap`, {}, buildHeaders(token));
+  return response.data;
+};
+
+export const getGameState = async (token, code) => {
+  const response = await axios.get(`${API_BASE_URL}/${code}/game/state`, buildHeaders(token));
+  return response.data;
+};
+
+export const sendGameInput = async (token, code, input) => {
+  const response = await axios.post(`${API_BASE_URL}/${code}/game/input`, input, buildHeaders(token));
+  return response.data;
+};

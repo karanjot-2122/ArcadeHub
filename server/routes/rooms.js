@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
-const { rooms } = require('../store/index');
+const { rooms, activeGames } = require('../store/index');
+const AgarIO = require('../games/AgarIO');
 
 const router = express.Router();
 
@@ -123,6 +124,53 @@ router.post('/:code/start', auth, (req, res) => {
 
   room.status = 'starting';
   res.json({ room: serializeRoom(room) });
+});
+
+router.post('/:code/game/bootstrap', auth, (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const room = rooms.get(code);
+
+  if (!room) {
+    return res.status(404).json({ message: 'Room not found.' });
+  }
+
+  if (room.gameId !== 'agar-io') {
+    return res.status(400).json({ message: 'Only AGAR.IO is currently playable.' });
+  }
+
+  let game = activeGames.get(code);
+  if (!game) {
+    game = new AgarIO(code, room.players);
+    activeGames.set(code, game);
+    game.start(() => {});
+  }
+
+  return res.json({ state: game.getState() });
+});
+
+router.get('/:code/game/state', auth, (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const game = activeGames.get(code);
+
+  if (!game) {
+    return res.status(404).json({ message: 'Game has not started yet.' });
+  }
+
+  return res.json({ state: game.getState() });
+});
+
+router.post('/:code/game/input', auth, (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const game = activeGames.get(code);
+
+  if (!game) {
+    return res.status(404).json({ message: 'Game has not started yet.' });
+  }
+
+  const { dx = 0, dy = 0 } = req.body || {};
+  game.updateInput(req.user._id.toString(), Number(dx) || 0, Number(dy) || 0);
+
+  return res.json({ ok: true });
 });
 
 module.exports = router;

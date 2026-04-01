@@ -22,6 +22,7 @@ class AgarIO {
     this.food = new Map();
     this.foodIdCounter = 0;
     this.gameLoop = null;
+    this.lastState = null;
 
     // Initialise each player
     players.forEach((player, index) => {
@@ -32,6 +33,8 @@ class AgarIO {
     for (let i = 0; i < MAX_FOOD; i++) {
       this._spawnFood();
     }
+
+    this.lastState = this._buildState();
   }
 
   // ─── helpers ────────────────────────────────────────────────────────────────
@@ -134,7 +137,16 @@ class AgarIO {
       }
     }
 
-    return this._buildState();
+    this.lastState = this._buildState();
+    return this.lastState;
+  }
+
+  getState() {
+    if (!this.lastState) {
+      this.lastState = this._buildState();
+    }
+
+    return this.lastState;
   }
 
   _buildState() {

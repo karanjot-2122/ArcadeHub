@@ -1,23 +1,24 @@
 import { useEffect, useRef, useContext, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import { AuthContext } from '../contexts/AuthContext';
+import { bootstrapGame, getGameState, sendGameInput } from '../services/roomApi';
 
 const AgarIOGame = () => {
   const { roomCode } = useParams();
-  const { token, user } = useContext(AuthContext);
+  const { token, user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const canvasRef = useRef(null);
-  const socketRef = useRef(null);
   const gameStateRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const animFrameRef = useRef(null);
   const inputIntervalRef = useRef(null);
+  const pollIntervalRef = useRef(null);
 
   const [leaderboard, setLeaderboard] = useState([]);
   const [isDead, setIsDead] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [gameError, setGameError] = useState('');
 
   // ─── render loop ────────────────────────────────────────────────────────────
   const render = useCallback(() => {
@@ -140,29 +141,61 @@ const AgarIOGame = () => {
     resize();
     window.addEventListener('resize', resize);
 
-    // Socket
-    const socket = io('http://localhost:5000', { auth: { token } });
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      setConnected(true);
-      socket.emit('join-game-room', { roomCode, gameId: 'agar-io' });
-    });
-
-    socket.on('game-state', (state) => {
+    const applyState = (state) => {
       gameStateRef.current = state;
+      setConnected(true);
+      setGameError('');
 
-      // Leaderboard
       const sorted = [...state.players]
         .filter((p) => p.alive)
         .sort((a, b) => b.mass - a.mass)
         .slice(0, 5);
       setLeaderboard(sorted);
 
-      // Death check
       const me = state.players.find((p) => p.id === user?.id);
       if (me && !me.alive) setIsDead(true);
-    });
+    };
+
+    const handleAuthFailure = () => {
+      logout();
+      navigate('/login', { replace: true });
+    };
+
+    const loadInitialState = async () => {
+      try {
+        const { state } = await bootstrapGame(token, roomCode);
+        applyState(state);
+      } catch (err) {
+        const status = err?.response?.status;
+        const message = err?.response?.data?.message || 'Unable to start game.';
+        setConnected(false);
+        setGameError(message);
+
+        if (status === 401) {
+          handleAuthFailure();
+        }
+      }
+    };
+
+    const pollState = async () => {
+      try {
+        const { state } = await getGameState(token, roomCode);
+        applyState(state);
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401) {
+          handleAuthFailure();
+          return;
+        }
+
+        if (status !== 404) {
+          setGameError(err?.response?.data?.message || 'Unable to refresh game state.');
+        }
+      }
+    };
+
+    loadInitialState();
+    pollIntervalRef.current = setInterval(pollState, 100);
 
     // Mouse tracking
     const onMouseMove = (e) => {
@@ -179,10 +212,13 @@ const AgarIOGame = () => {
 
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
-      socket.emit('player-input', {
-        roomCode,
+      sendGameInput(token, roomCode, {
         dx: mouseRef.current.x - cx,
         dy: mouseRef.current.y - cy,
+      }).catch((err) => {
+        if (err?.response?.status === 401) {
+          handleAuthFailure();
+        }
       });
     }, 50);
 
@@ -193,11 +229,10 @@ const AgarIOGame = () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
       clearInterval(inputIntervalRef.current);
+      clearInterval(pollIntervalRef.current);
       cancelAnimationFrame(animFrameRef.current);
-      socket.emit('leave-game-room', { roomCode });
-      socket.disconnect();
     };
-  }, [token, user, roomCode, render]);
+  }, [token, user, roomCode, render, logout, navigate]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#080808', overflow: 'hidden' }}>
@@ -276,6 +311,17 @@ const AgarIOGame = () => {
           color: '#a3e635', fontSize: 13, letterSpacing: '0.12em',
         }}>
           Connecting…
+        </div>
+      )}
+
+      {gameError && (
+        <div style={{
+          position: 'absolute', bottom: 78, left: '50%', transform: 'translateX(-50%)',
+          color: '#fecaca', fontSize: 12, letterSpacing: '0.06em',
+          background: 'rgba(127,29,29,0.65)', border: '1px solid rgba(248,113,113,0.55)',
+          borderRadius: 10, padding: '7px 12px',
+        }}>
+          {gameError}
         </div>
       )}
     </div>
