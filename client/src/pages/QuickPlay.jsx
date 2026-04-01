@@ -46,6 +46,11 @@ const GameIcons = {
       <span className="text-2xl">❌</span>
     </div>
   ),
+  bingo: () => (
+    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-pink-400 to-fuchsia-400 rounded-full shadow-lg group-hover:shadow-[0_0_25px_rgba(205,220,57,0.6)]">
+      <span className="text-2xl">🎱</span>
+    </div>
+  ),
 };
 
 const QuickPlay = () => {

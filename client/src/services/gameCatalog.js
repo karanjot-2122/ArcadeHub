@@ -7,18 +7,18 @@ export const gameCatalog = [
     accent: 'from-emerald-400 via-cyan-400 to-blue-500',
   },
   {
-    id: 'particle-war',
-    name: 'PARTICLE WAR',
-    description: 'Fast arena battles with high-speed particle combat.',
-    icon: '⚛️',
-    accent: 'from-fuchsia-400 via-pink-500 to-rose-500',
+    id: 'tic-tac-toe',
+    name: 'TIC TAC TOE',
+    description: 'Classic strategy with quick competitive rounds.',
+    icon: '❌',
+    accent: 'from-indigo-400 via-violet-500 to-purple-500',
   },
   {
-    id: 'tron-bikes',
-    name: 'TRON BIKES',
-    description: 'Light up the grid and trap your opponents.',
-    icon: '🏍️',
-    accent: 'from-cyan-400 via-sky-500 to-indigo-500',
+    id: 'bingo',
+    name: 'BINGO',
+    description: 'Mark numbers fast and complete your card before anyone else.',
+    icon: '🎱',
+    accent: 'from-pink-400 via-fuchsia-500 to-purple-500',
   },
   {
     id: 'sumo',
@@ -40,13 +40,6 @@ export const gameCatalog = [
     description: 'Survive a dense storm of projectiles and chaos.',
     icon: '💥',
     accent: 'from-red-400 via-rose-500 to-pink-500',
-  },
-  {
-    id: 'tic-tac-toe',
-    name: 'TIC TAC TOE',
-    description: 'Classic strategy with quick competitive rounds.',
-    icon: '❌',
-    accent: 'from-indigo-400 via-violet-500 to-purple-500',
   },
 ];
 

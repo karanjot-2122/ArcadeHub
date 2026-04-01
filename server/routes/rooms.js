@@ -6,15 +6,17 @@ const AgarIO = require('../games/AgarIO');
 const router = express.Router();
 
 const ROOM_CAPACITY = 10;
+const TIC_TAC_TOE_CAPACITY = 2;
 const GAME_MAP = {
   'agar-io': 'AGAR.IO',
-  'particle-war': 'PARTICLE WAR',
-  'tron-bikes': 'TRON BIKES',
+  'tic-tac-toe': 'TIC TAC TOE',
+  bingo: 'BINGO',
   sumo: 'SUMO',
   'infinite-climber': 'INFINITE CLIMBER',
   'bullet-hell': 'BULLET HELL',
-  'tic-tac-toe': 'TIC TAC TOE',
 };
+
+const getRoomCapacity = (gameId) => (gameId === 'tic-tac-toe' ? TIC_TAC_TOE_CAPACITY : ROOM_CAPACITY);
 
 const generateRoomCode = () => {
   let code = '';
@@ -60,7 +62,7 @@ router.post('/', auth, (req, res) => {
     leaderId: leader.id,
     leaderName: leader.username,
     players: [leader],
-    maxPlayers: ROOM_CAPACITY,
+    maxPlayers: getRoomCapacity(gameId),
     status: 'waiting',
     createdAt: new Date().toISOString(),
   };
