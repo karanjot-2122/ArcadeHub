@@ -5,6 +5,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const GlobalChatMessage = require('./models/GlobalChatMessage');
 const { rooms, activeGames } = require('./store/index');
 const AgarIO = require('./games/AgarIO');
 require('dotenv').config();
@@ -39,8 +40,40 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 const onlineUsers = new Map(); // userId => Set(socketId)
-const globalChatHistory = [];
 const MAX_GLOBAL_MESSAGES = 50;
+
+const serializeGlobalMessage = (doc) => ({
+  user: doc.user,
+  text: doc.text,
+  time: doc.createdAt.toISOString(),
+});
+
+const getLatestGlobalMessages = async () => {
+  const docs = await GlobalChatMessage.find({})
+    .sort({ createdAt: -1 })
+    .limit(MAX_GLOBAL_MESSAGES)
+    .lean();
+
+  return docs.reverse().map((doc) => ({
+    user: doc.user,
+    text: doc.text,
+    time: new Date(doc.createdAt).toISOString(),
+  }));
+};
+
+const trimGlobalMessages = async () => {
+  const overflowDocs = await GlobalChatMessage.find({})
+    .sort({ createdAt: -1 })
+    .skip(MAX_GLOBAL_MESSAGES)
+    .select('_id')
+    .lean();
+
+  if (!overflowDocs.length) return;
+
+  await GlobalChatMessage.deleteMany({
+    _id: { $in: overflowDocs.map((doc) => doc._id) },
+  });
+};
 
 io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token || socket.handshake.query?.token;
@@ -100,24 +133,31 @@ io.on('connection', async (socket) => {
 
   await emitFriendsOnlineSnapshot();
 
-  // send existing global chat history to newly connected user
-  socket.emit('global-history', globalChatHistory);
+  // send persisted global chat history to newly connected user
+  try {
+    const history = await getLatestGlobalMessages();
+    socket.emit('global-history', history);
+  } catch (err) {
+    console.error('Failed to load global chat history:', err);
+    socket.emit('global-history', []);
+  }
 
-  socket.on('global-message', (payload) => {
-    const now = new Date();
-    const message = {
-      user: payload.user || user.username,
-      text: payload.text || '',
-      time: now.toISOString(),
-    };
+  socket.on('global-message', async (payload) => {
+    const text = String(payload?.text || '').trim();
+    if (!text) return;
 
-    // add to history ring buffer
-    globalChatHistory.push(message);
-    if (globalChatHistory.length > MAX_GLOBAL_MESSAGES) {
-      globalChatHistory.shift();
+    try {
+      const saved = await GlobalChatMessage.create({
+        user: user.username,
+        text,
+      });
+
+      await trimGlobalMessages();
+
+      io.emit('global-message', serializeGlobalMessage(saved));
+    } catch (err) {
+      console.error('Failed to persist global message:', err);
     }
-
-    io.emit('global-message', message);
   });
 
   socket.on('request-friends-online-snapshot', async () => {
