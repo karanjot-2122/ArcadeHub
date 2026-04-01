@@ -4,6 +4,8 @@ import { AuthContext } from '../contexts/AuthContext';
 import { bootstrapGame, getGameState, sendGameInput } from '../services/roomApi';
 
 const LERP = 0.2;
+const STATE_POLL_MS = 50;
+const INPUT_SEND_MS = 50;
 
 const AgarIOGame = () => {
   const { roomCode } = useParams();
@@ -259,7 +261,7 @@ const AgarIOGame = () => {
     };
 
     loadInitialState();
-    pollIntervalRef.current = setInterval(pollState, 80);
+    pollIntervalRef.current = setInterval(pollState, STATE_POLL_MS);
 
     const onMouseMove = (e) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
@@ -293,7 +295,7 @@ const AgarIOGame = () => {
       } finally {
         inputInFlightRef.current = false;
       }
-    }, 80);
+    }, INPUT_SEND_MS);
 
     animFrameRef.current = requestAnimationFrame(render);
 
