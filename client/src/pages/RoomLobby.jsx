@@ -34,8 +34,16 @@ const RoomLobby = () => {
   // Auto-navigate to game when the leader starts the room
   useEffect(() => {
     if (room?.status === 'starting' && room?.gameId) {
+      const targetPath = `/game/${room.code}`;
       const timer = setTimeout(() => {
-        navigate(`/game/${room.code}`);
+        navigate(targetPath, { replace: true });
+
+        // Fallback for hosted builds where SPA navigation may fail silently
+        setTimeout(() => {
+          if (window.location.pathname !== targetPath) {
+            window.location.assign(targetPath);
+          }
+        }, 350);
       }, 1200);
       return () => clearTimeout(timer);
     }
