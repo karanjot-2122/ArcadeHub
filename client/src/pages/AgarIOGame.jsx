@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { bootstrapGame, getGameState, sendGameInput } from '../services/roomApi';
 
+const LERP = 0.2;
+
 const AgarIOGame = () => {
   const { roomCode } = useParams();
   const { token, user, logout } = useContext(AuthContext);
@@ -10,17 +12,34 @@ const AgarIOGame = () => {
 
   const canvasRef = useRef(null);
   const gameStateRef = useRef(null);
+  const renderPlayersRef = useRef(new Map());
   const mouseRef = useRef({ x: 0, y: 0 });
+  const lastInputRef = useRef({ dx: 0, dy: 0 });
   const animFrameRef = useRef(null);
   const inputIntervalRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const pollInFlightRef = useRef(false);
+  const inputInFlightRef = useRef(false);
 
   const [leaderboard, setLeaderboard] = useState([]);
   const [isDead, setIsDead] = useState(false);
   const [connected, setConnected] = useState(false);
   const [gameError, setGameError] = useState('');
 
-  // ─── render loop ────────────────────────────────────────────────────────────
+  const drawArrow = (ctx, x, y, angle, color) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(9, 0);
+    ctx.lineTo(-7, -5);
+    ctx.lineTo(-7, 5);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  };
+
   const render = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -34,7 +53,6 @@ const AgarIOGame = () => {
     ctx.fillRect(0, 0, W, H);
 
     if (!state) {
-      // Waiting message
       ctx.fillStyle = '#a3e635';
       ctx.font = 'bold 24px Arial';
       ctx.textAlign = 'center';
@@ -45,17 +63,40 @@ const AgarIOGame = () => {
     }
 
     const myId = user?.id;
-    const me = state.players.find((p) => p.id === myId);
+    const renderMap = renderPlayersRef.current;
+
+    for (const player of state.players) {
+      const prev = renderMap.get(player.id);
+      if (!prev) {
+        renderMap.set(player.id, { ...player });
+        continue;
+      }
+
+      prev.x += (player.x - prev.x) * LERP;
+      prev.y += (player.y - prev.y) * LERP;
+      prev.mass += (player.mass - prev.mass) * LERP;
+      prev.radius += (player.radius - prev.radius) * LERP;
+      prev.alive = player.alive;
+      prev.color = player.color;
+      prev.username = player.username;
+    }
+
+    const idSet = new Set(state.players.map((p) => p.id));
+    for (const id of renderMap.keys()) {
+      if (!idSet.has(id)) renderMap.delete(id);
+    }
+
+    const renderedPlayers = [...renderMap.values()];
+    const me = renderedPlayers.find((p) => p.id === myId);
     const camX = me ? me.x : state.worldWidth / 2;
     const camY = me ? me.y : state.worldHeight / 2;
-    const zoom = me ? Math.max(0.25, Math.min(1, 1 / Math.sqrt(me.mass / 10))) : 0.6;
+    const zoom = me ? Math.max(0.26, Math.min(1, 1 / Math.sqrt(me.mass / 10))) : 0.6;
 
     ctx.save();
     ctx.translate(W / 2, H / 2);
     ctx.scale(zoom, zoom);
     ctx.translate(-camX, -camY);
 
-    // Grid
     const gridSize = 60;
     ctx.strokeStyle = '#161616';
     ctx.lineWidth = 1;
@@ -66,18 +107,22 @@ const AgarIOGame = () => {
     const gx0 = Math.floor(vLeft / gridSize) * gridSize;
     const gy0 = Math.floor(vTop / gridSize) * gridSize;
     for (let x = gx0; x <= vRight + gridSize; x += gridSize) {
-      ctx.beginPath(); ctx.moveTo(x, vTop - gridSize); ctx.lineTo(x, vBottom + gridSize); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, vTop - gridSize);
+      ctx.lineTo(x, vBottom + gridSize);
+      ctx.stroke();
     }
     for (let y = gy0; y <= vBottom + gridSize; y += gridSize) {
-      ctx.beginPath(); ctx.moveTo(vLeft - gridSize, y); ctx.lineTo(vRight + gridSize, y); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(vLeft - gridSize, y);
+      ctx.lineTo(vRight + gridSize, y);
+      ctx.stroke();
     }
 
-    // World border
     ctx.strokeStyle = '#a3e635';
     ctx.lineWidth = 4;
     ctx.strokeRect(0, 0, state.worldWidth, state.worldHeight);
 
-    // Food
     for (const food of state.food) {
       ctx.beginPath();
       ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
@@ -85,31 +130,26 @@ const AgarIOGame = () => {
       ctx.fill();
     }
 
-    // Players
-    for (const player of state.players) {
+    for (const player of renderedPlayers) {
       if (!player.alive) continue;
       const isMe = player.id === myId;
 
-      // Shadow
       ctx.beginPath();
       ctx.arc(player.x + 4, player.y + 4, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.fill();
 
-      // Cell body
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = player.color;
       ctx.fill();
 
-      // Border
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.strokeStyle = isMe ? '#ffffff' : 'rgba(255,255,255,0.25)';
       ctx.lineWidth = isMe ? 3 : 1.5;
       ctx.stroke();
 
-      // Name + mass label
       if (player.radius > 14) {
         const fontSize = Math.max(12, Math.min(player.radius * 0.38, 28));
         ctx.fillStyle = '#fff';
@@ -127,10 +167,30 @@ const AgarIOGame = () => {
 
     ctx.restore();
 
+    const edgePad = 36;
+    for (const player of renderedPlayers) {
+      if (!player.alive || player.id === myId) continue;
+
+      const sx = (player.x - camX) * zoom + W / 2;
+      const sy = (player.y - camY) * zoom + H / 2;
+      const inView = sx >= edgePad && sx <= W - edgePad && sy >= edgePad && sy <= H - edgePad;
+      if (inView) continue;
+
+      const angle = Math.atan2(sy - H / 2, sx - W / 2);
+      const maxRadiusX = W / 2 - edgePad;
+      const maxRadiusY = H / 2 - edgePad;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const scale = Math.min(Math.abs(maxRadiusX / (cos || 0.0001)), Math.abs(maxRadiusY / (sin || 0.0001)));
+      const ax = W / 2 + cos * scale;
+      const ay = H / 2 + sin * scale;
+
+      drawArrow(ctx, ax, ay, angle, player.color || '#fff');
+    }
+
     animFrameRef.current = requestAnimationFrame(render);
   }, [user]);
 
-  // ─── setup ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -178,6 +238,8 @@ const AgarIOGame = () => {
     };
 
     const pollState = async () => {
+      if (pollInFlightRef.current) return;
+      pollInFlightRef.current = true;
       try {
         const { state } = await getGameState(token, roomCode);
         applyState(state);
@@ -191,20 +253,21 @@ const AgarIOGame = () => {
         if (status !== 404) {
           setGameError(err?.response?.data?.message || 'Unable to refresh game state.');
         }
+      } finally {
+        pollInFlightRef.current = false;
       }
     };
 
     loadInitialState();
-    pollIntervalRef.current = setInterval(pollState, 100);
+    pollIntervalRef.current = setInterval(pollState, 80);
 
-    // Mouse tracking
     const onMouseMove = (e) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', onMouseMove);
 
-    // Send input at ~20fps
-    inputIntervalRef.current = setInterval(() => {
+    inputIntervalRef.current = setInterval(async () => {
+      if (inputInFlightRef.current) return;
       const state = gameStateRef.current;
       if (!state) return;
       const me = state.players.find((p) => p.id === user?.id);
@@ -212,17 +275,26 @@ const AgarIOGame = () => {
 
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
-      sendGameInput(token, roomCode, {
-        dx: mouseRef.current.x - cx,
-        dy: mouseRef.current.y - cy,
-      }).catch((err) => {
+      const dx = mouseRef.current.x - cx;
+      const dy = mouseRef.current.y - cy;
+
+      const diffX = Math.abs(dx - lastInputRef.current.dx);
+      const diffY = Math.abs(dy - lastInputRef.current.dy);
+      if (diffX < 2 && diffY < 2) return;
+
+      lastInputRef.current = { dx, dy };
+      inputInFlightRef.current = true;
+      try {
+        await sendGameInput(token, roomCode, { dx, dy });
+      } catch (err) {
         if (err?.response?.status === 401) {
           handleAuthFailure();
         }
-      });
-    }, 50);
+      } finally {
+        inputInFlightRef.current = false;
+      }
+    }, 80);
 
-    // Start render loop
     animFrameRef.current = requestAnimationFrame(render);
 
     return () => {
@@ -238,7 +310,6 @@ const AgarIOGame = () => {
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#080808', overflow: 'hidden' }}>
       <canvas ref={canvasRef} style={{ display: 'block' }} />
 
-      {/* Leaderboard */}
       <div style={{
         position: 'absolute', top: 16, right: 16,
         background: 'rgba(0,0,0,0.75)', borderRadius: 16, padding: '12px 16px',
@@ -259,7 +330,6 @@ const AgarIOGame = () => {
         {leaderboard.length === 0 && <p style={{ color: '#475569', fontSize: 11, margin: 0 }}>Loading…</p>}
       </div>
 
-      {/* Room code badge */}
       <div style={{
         position: 'absolute', top: 16, left: 16,
         background: 'rgba(0,0,0,0.75)', borderRadius: 12, padding: '8px 14px',
@@ -269,7 +339,18 @@ const AgarIOGame = () => {
         <p style={{ margin: 0, color: '#a3e635', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{roomCode}</p>
       </div>
 
-      {/* Controls hint */}
+      <button
+        onClick={() => navigate('/rooms')}
+        style={{
+          position: 'absolute', top: 78, left: 16,
+          background: 'rgba(0,0,0,0.78)', color: '#fff', border: '1px solid rgba(163,230,53,0.35)',
+          borderRadius: 999, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+        }}
+      >
+        Leave
+      </button>
+
       <div style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
         color: 'rgba(255,255,255,0.35)', fontSize: 11, letterSpacing: '0.1em',
@@ -278,7 +359,6 @@ const AgarIOGame = () => {
         Move your mouse to steer · Eat food & smaller cells to grow
       </div>
 
-      {/* Dead overlay */}
       {isDead && (
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
@@ -304,7 +384,6 @@ const AgarIOGame = () => {
         </div>
       )}
 
-      {/* Not connected yet */}
       {!connected && (
         <div style={{
           position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)',
